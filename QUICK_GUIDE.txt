@@ -1,0 +1,883 @@
+================================================================================
+                    VENOM DASHBOARD - QUICK GUIDE
+================================================================================
+
+PROJECT OVERVIEW
+----------------
+This is a Flask-based dashboard system with role-based access control and 
+messaging/inbox functionality. Four user roles exist: Master, Admin, 
+Super Seller, and Seller.
+
+
+GETTING STARTED
+---------------
+
+1. START THE SERVER
+   Open PowerShell in project folder and run:
+   
+   python app.py
+   
+   Server will start at: http://localhost:5000 or http://127.0.0.1:5000
+
+
+2. OPEN IN BROWSER
+   Navigate to: http://localhost:5000
+   You will be redirected to the login page automatically.
+
+
+LOGIN CREDENTIALS
+-----------------
+
+**IMPORTANT: Only 1 Super Master and 5 Master accounts are hardcoded. All other users (Admin, Super Seller, Seller) 
+must be created by Masters through the dashboard UI.**
+
+SUPER MASTER DASHBOARD (Highest Authority)
+├─ Username: super_master
+├─ Password: super_master123
+└─ Access: Can create and manage all Master accounts
+
+MASTER DASHBOARD
+├─ Username: master
+├─ Password: master123
+└─ Access: Full system control, can create admins (Created by super_master)
+
+MASTER DASHBOARD 2
+├─ Username: master2
+├─ Password: master456
+└─ Access: Full system control, can create admins (Created by super_master)
+
+MASTER DASHBOARD 3
+├─ Username: master3
+├─ Password: master789
+└─ Access: Full system control, can create admins (Created by super_master)
+
+MASTER DASHBOARD 4
+├─ Username: master4
+├─ Password: master012
+└─ Access: Full system control, can create admins (Created by super_master)
+
+MASTER DASHBOARD 5
+├─ Username: master5
+├─ Password: master345
+└─ Access: Full system control, can create admins (Created by super_master)
+
+**How to create other users:**
+- Super Master creates Master via "Manage Master" menu
+- Master creates Admin via "Manage Admin" menu
+- Admin creates Super Seller via "Manage Super Seller" menu  
+- Super Seller creates Seller via "Manage Seller" menu
+- Each Master sees ONLY their own hierarchy (complete isolation)
+
+
+USER MANAGEMENT SYSTEM - HOW IT WORKS
+--------------------------------------
+
+ROLE HIERARCHY & USER MANAGEMENT PERMISSIONS:
+
+Super Master (Highest Level)
+  └─→ Can CREATE: Master accounts
+      Can MANAGE: masters
+      Access via: "Manage Master" menu
+
+Master (Top Level)
+  └─→ Can CREATE: Admin accounts
+      Can MANAGE: admins
+      Access via: "Manage Admin" menu
+
+Admin  
+  └─→ Can CREATE: Super Seller accounts
+      Can MANAGE: super sellers
+      Access via: "Manage Super Seller" menu
+
+Super Seller
+  └─→ Can CREATE: Seller accounts
+      Can MANAGE: sellers
+      Access via: "Manage Seller" menu
+
+Seller (Bottom Level)
+  └─→ Cannot create or manage users (read-only role)
+
+
+INBOX SYSTEM - HOW IT WORKS
+----------------------------
+
+ROLE HIERARCHY & MESSAGING PERMISSIONS:
+
+Master (Top Level)
+  └─→ Can send messages to: Admin, Super Seller, Seller
+      Cannot receive messages (highest authority)
+
+Admin  
+  └─→ Can send messages to: Super Seller, Seller
+      Can receive messages from: Master
+
+Super Seller
+  └─→ Can send messages to: Seller
+      Can receive messages from: Master, Admin
+
+Seller (Bottom Level)
+  └─→ Cannot send messages (read-only inbox)
+      Can receive messages from: Master, Admin, Super Seller
+
+
+TESTING INBOX SYSTEM - STEP BY STEP
+------------------------------------
+
+TEST 1: Master sends message to Admin
+--------------------------------------
+1. Login as Master
+   - Go to http://localhost:5000
+   - Username: master
+   - Password: master123
+   - Click LOGIN
+
+2. Send Message
+   - Click "Inbox" in left sidebar
+   - Click "Compose Message" button
+   - Select "admin (admin)" from dropdown
+   - Subject: Important Update
+   - Message: Please review the new pricing structure
+   - Click "Send Message"
+   - You will see success confirmation
+
+3. Sign Out
+   - Click "Sign out" in left sidebar
+   - Confirm "OK" in dialog box
+   - You will be redirected to login page
+
+4. Login as Admin
+   - Username: admin
+   - Password: admin123
+   - Click LOGIN
+
+5. Check Inbox
+   - Click "Inbox" in left sidebar
+   - You will see:
+     * "1 unread" badge in orange
+     * Message from master with yellow background
+     * Subject: Important Update
+   - Click on the message to read it
+   - Background will turn white
+   - "NEW" badge will disappear
+   - Unread count will update
+
+
+TEST 2: Admin sends message to Super Seller
+--------------------------------------------
+1. While logged in as admin
+   - Go to Inbox
+   - Click "Compose Message"
+   - Select "super_seller (super_seller)"
+   - Subject: Commission Update
+   - Message: New commission rate is 5% starting next month
+   - Click "Send Message"
+
+2. Sign out and Login as Super Seller
+   - Click "Sign out"
+   - Username: super_seller
+   - Password: super123
+   - Click LOGIN
+
+3. Check Inbox
+   - Click "Inbox"
+   - See message from admin
+   - Click to read
+
+
+TEST 3: Super Seller sends message to Seller
+---------------------------------------------
+1. While logged in as super_seller
+   - Go to Inbox
+   - Click "Compose Message"
+   - Select "seller (seller)"
+   - Subject: Training Schedule
+   - Message: Please attend training on Monday at 10 AM
+   - Click "Send Message"
+
+2. Sign out and Login as Seller
+   - Click "Sign out"
+   - Username: seller
+   - Password: seller123
+   - Click LOGIN
+
+3. Check Inbox
+   - Click "Inbox"
+   - See message from super_seller
+   - Click to read
+   - NOTE: NO "Compose Message" button (sellers cannot send messages)
+
+
+INBOX FEATURES
+--------------
+
+1. COMPOSE MESSAGE
+   - Click "Compose Message" button
+   - Select recipient from dropdown (only shows users you can message)
+   - Enter subject (required)
+   - Enter message (required)
+   - Click "Send Message"
+   - Form will reset after successful send
+
+2. READ MESSAGE
+   - Click on any message in the list
+   - Message automatically marked as read
+   - Yellow background changes to white
+   - "NEW" badge disappears
+   - Unread count updates
+
+3. DELETE MESSAGE
+   - Click "Delete" button on any message
+   - Confirm deletion
+   - Message removed from inbox
+   - List refreshes automatically
+
+4. UNREAD INDICATOR
+   - Orange badge shows unread count
+   - Yellow background for unread messages
+   - White background for read messages
+   - "NEW" badge on unread messages
+
+
+
+KEYS SYSTEM (ACCESS TOKENS) - HOW IT WORKS
+-------------------------------------------
+
+PURPOSE:
+Keys are access tokens (API/license keys) created and managed by users (mainly sellers). Each key has a name, password (for authentication), a unique 9-digit code, and status (active/inactive). Only one device (IP address) can use a key at a time. Paid status (set by higher role) enables 30-day active duration.
+
+ROLE-BASED ACCESS:
+- Seller: Can create/manage own keys (create, view, reset device, delete). Cannot set paid/active duration. Keys created unpaid.
+- Super Seller: Can manage sellers' keys, set paid (activate for 30 days). Own keys created unpaid.
+- Admin: Can manage super sellers' keys, set paid. Own keys created unpaid.
+- Master: Can manage all keys, set paid. **Own keys auto-activated for 30 days** (master privilege).
+- Hierarchy: Higher roles can view/manage lower roles' keys, never the reverse.
+
+DATABASE STRUCTURE:
+- keys table: id, name (unique per creator), key_code (unique 9-digit), password_hash (bcrypt), created_by (FK to users.id), created_at, active_until (date), is_paid (bool), is_active (bool, computed from active_until).
+- key_access table: id, key_id (FK), ip_address, last_access. Only one device per key enforced.
+
+KEY CREATION FLOW:
+1. Sidebar: "Create Key" link loads form (name, password, confirm password).
+2. User fills form → JS validates → POST /api/keys/create {name, password}.
+3. Backend: 
+   - Checks login/role, name uniqueness, hashes password, generates unique 9-digit key_code
+   - If role=master: Sets is_paid=1, is_active=1, active_until=today+30days (auto-activated)
+   - If role≠master: Sets is_paid=0, is_active=0, active_until=NULL (needs activation)
+4. Success: Returns {success, key_code, is_paid, is_active, active_until, message}. JS shows key_code with special message for master.
+5. Edge: Duplicate name → error. Key_code collision (rare) → regenerate.
+
+MANAGE/ALL KEYS FLOW:
+1. Sidebar: "Manage Keys" loads table of keys (name, code, status, duration, created, IP, actions).
+2. Table: Shows only own/subordinate keys (role-based filter). Columns: Name, Key Code, Active Duration (days left or Inactive), Status (active/inactive), Created At, IP.
+3. Actions:
+   - Activate: Higher role can activate unpaid key (PUT /api/keys/update-paid/<key_id> with is_paid=true), sets active_until, is_active.
+   - Extend: Higher role can extend EXISTING active key's validity (PUT /api/keys/update-paid/<key_id> with extend=true). Adds days to current expiry.
+   - Unpay: Higher role can deactivate key (PUT /api/keys/update-paid/<key_id> with is_paid=false).
+   - Reset Device: Creator or higher can reset device lock (POST /api/keys/reset-device/<key_id>).
+   - Delete: Delete key (DELETE /api/keys/delete/<key_id>), cascades to key_access and key_access_history.
+4. Device Restriction: On key access, IP is checked/set. If device mismatch, access is blocked unless reset.
+5. Expiry: If active_until < today, is_active=false (auto-computed on load).
+
+ERROR HANDLING & SECURITY:
+- Unauthorized access: 403. Invalid input: 400. DB error: 500. JS shows errors/alerts.
+- Passwords always hashed (bcrypt). Key_code never editable. All inputs sanitized.
+- One device per key enforced (key_access unique per key_id).
+
+INTEGRATION:
+- Backend: New API routes in app.py (see below). Uses session for auth, role checks, and hierarchy enforcement.
+- Frontend: Sidebar links for "Create Key" and "Manage Keys". Form/table generated by keys.js. All actions via API.
+- JS: keys.js handles all UI, fetches, and updates dynamically.
+
+API ENDPOINTS (KEYS):
+- POST   /api/keys/create            - Create new key
+- GET    /api/keys/list              - List keys (role-based)
+- PUT    /api/keys/update-paid/<id>  - Set/extend paid/active status (params: is_paid, duration_days, extend)
+- POST   /api/keys/reset-device/<id> - Reset device IP
+- DELETE /api/keys/delete/<id>       - Delete key
+- POST   /api/keys/access            - Validate key access (for external apps)
+- GET    /api/keys/access-history/<id> - Get access history for a key
+- POST   /api/keys/access/<code>    - Access key (IP/MAC check, password verify)
+
+UI/UX:
+- Sidebar: "Create Key", "Manage Keys" for all roles.
+- Create Key: Form with name, password, confirm. On success, shows generated key_code.
+- Manage Keys: Table with all info, action buttons (Set Paid, Reset IP/MAC, Delete) as per permissions.
+- All actions update UI in real time.
+
+TYPICAL WORKFLOW:
+1. Seller creates key → gets code → uses on device (locks to IP/MAC).
+2. Super Seller/Admin/Master can activate (paid) for 30 days.
+3. If device changes, must reset IP/MAC via UI.
+4. Expired/unpaid keys auto-inactive.
+5. All actions logged and validated by backend.
+
+DASHBOARD FEATURES
+------------------
+
+All dashboards include:
+- Dashboard Cards (overview stats)
+- Create/Manage Menus
+- User Management (role-specific)
+- Keys Management (see above)
+- Results Tracking
+- News & Announcements
+- Inbox (messaging system)
+- Settings (light/dark mode)
+- Sign Out
+
+
+TROUBLESHOOTING
+---------------
+
+Problem: Cannot login
+Solution: 
+  - Check username and password are correct
+  - Ensure login type matches user role
+  - Check server is running (python app.py)
+
+Problem: Sign out not working
+Solution:
+  - Hard refresh browser (Ctrl + Shift + R)
+  - Clear browser cache
+  - Restart server
+
+Problem: Inbox not loading
+Solution:
+  - Check browser console for errors (F12)
+  - Verify server is running
+  - Refresh the page
+  - Check database file exists (venom_users.db)
+
+Problem: Cannot send message
+Solution:
+  - Verify you have permission to message that role
+  - Check recipient exists in dropdown
+  - Ensure all fields are filled
+  - Check browser console for errors
+
+Problem: Compose button not showing
+Solution:
+  - This is normal for Sellers (they cannot send messages)
+  - Check your role permissions
+
+
+DATABASE INFO
+-------------
+
+Database Type: MySQL
+Database Name: tatkal_db
+Database User: tatkal_user
+
+Configuration: See config.py for connection details
+Setup Guide: See MYSQL_SETUP_GUIDE.md for installation instructions
+
+Tables:
+1. users
+   - id, username, password (hashed), role, created_at, created_by, mac_address
+
+2. messages  
+   - id, from_user_id, to_user_id, subject, message, is_read, created_at
+
+3. news
+   - id, author_id, title, content, target_role, is_active, created_at, updated_at
+
+4. news_read
+   - id, news_id, user_id, read_at
+
+5. keys
+   - id, name, key_code, password_hash, created_by, created_at, active_until, is_paid, is_active, mac_address
+
+6. key_access
+   - id, key_id, ip_address, last_access
+
+7. key_access_history
+   - id, key_id, ip_address, user_agent, access_status, access_message, accessed_at
+
+8. tickets
+   - id, ticket_date, from_location, to_location, source, notes, created_at
+
+
+API ENDPOINTS
+-------------
+
+Authentication:
+- POST   /api/login          - User login
+- POST   /api/logout         - User logout  
+- GET    /api/session-check  - Check session validity
+
+Inbox:
+- GET    /api/inbox/messages      - Get all messages for user
+- POST   /api/inbox/send          - Send new message
+- POST   /api/inbox/mark-read/:id - Mark message as read
+- DELETE /api/inbox/delete/:id    - Delete message
+- GET    /api/users/list          - Get messageable users
+
+News:
+- GET    /api/news/list           - Get news for current user
+- POST   /api/news/create         - Create news announcement
+- POST   /api/news/mark-read/:id  - Mark news as read
+- DELETE /api/news/delete/:id     - Delete news
+- PUT    /api/news/update/:id     - Update news
+- GET    /api/news/target-roles   - Get roles user can post to
+
+User Management:
+- POST   /api/users/create        - Create new user
+- GET    /api/users/list-managed  - Get managed users
+- DELETE /api/users/delete/:id    - Delete user
+- PUT    /api/users/update-password/:id - Reset password
+- GET    /api/users/stats         - Get user statistics
+
+Key Management:
+- POST   /api/keys/create         - Create new key
+- GET    /api/keys/list           - Get all keys (role-based)
+- PUT    /api/keys/update-paid/:id - Activate/deactivate key (with duration)
+- POST   /api/keys/reset-device/:id - Reset device binding
+- DELETE /api/keys/delete/:id     - Delete key
+- POST   /api/keys/access         - Authenticate key (device enforcement)
+
+
+QUICK TESTING CHECKLIST
+------------------------
+
+□ Start server (python app.py)
+□ Open browser (http://localhost:5000)
+□ Login as master (master/master123)
+□ Send message to admin
+□ Sign out
+□ Login as admin (admin/admin123)
+□ Check inbox (should see 1 unread message)
+□ Read message (background turns white)
+□ Send message to super_seller
+□ Sign out
+□ Login as super_seller (super_seller/super123)
+□ Check inbox
+□ Send message to seller
+□ Sign out
+□ Login as seller (seller/seller123)
+□ Check inbox (no compose button)
+□ Delete message
+□ Sign out
+
+
+TESTING USER MANAGEMENT - STEP BY STEP
+---------------------------------------
+
+TEST 1: Master Creates Admin
+1. Login as master (master/master123)
+2. Click "Manage Admin" menu
+3. Click "Create Admin" button
+4. Fill form:
+   - Username: testadmin
+   - Password: admin789
+   - Confirm: admin789
+5. Click "Create Account"
+6. Verify new admin appears in table
+7. Sign out and login as testadmin/admin789
+
+TEST 2: Admin Creates Super Seller
+1. Login as admin (admin/admin123)
+2. Click "Manage Super Seller" menu
+3. Click "Create Super Seller" button
+4. Fill form:
+   - Username: testsuper
+   - Password: super789
+   - Confirm: super789
+5. Click "Create Account"
+6. Verify new super_seller appears
+7. Test "Reset Password" button
+8. Test "Delete" button
+
+TEST 3: Super Seller Creates Seller
+1. Login as super_seller (super_seller/super123)
+2. Click "Manage Seller" menu
+3. Click "Create Seller" button
+4. Fill form:
+   - Username: testseller
+   - Password: seller789
+   - Confirm: seller789
+5. Click "Create Account"
+6. Verify new seller appears
+
+
+KEY MANAGEMENT SYSTEM - HOW IT WORKS
+-------------------------------------
+
+WHAT IS A KEY?
+A key is an access token with:
+- Unique 9-digit code (randomly generated)
+- Name (identifier set by creator)
+- Password (for authentication)
+- Status (Active/Inactive based on paid status)
+- Device binding (one key = one device via IP/MAC)
+
+ROLE HIERARCHY & KEY PERMISSIONS:
+
+Master
+├─ Can create/manage keys
+├─ Can activate keys (set paid status)
+└─ Can view all admin/super_seller/seller keys
+
+Admin
+├─ Can create/manage keys
+├─ Can activate keys (set paid status)
+└─ Can view super_seller/seller keys
+
+Super Seller
+├─ Can create/manage keys
+├─ Can activate keys (set paid status for seller keys)
+└─ Can view seller keys
+
+Seller
+├─ Can create own keys
+├─ Can view/delete own keys
+├─ Can reset own key device
+└─ CANNOT activate keys (needs super_seller approval)
+
+KEY FEATURES:
+
+1. CREATE KEY
+   - Menu: "Create Key" in sidebar
+   - Required: Name (min 3 chars), Password (min 6 chars)
+   - System generates unique 9-digit code
+   - Initially inactive (unpaid)
+
+2. VIEW ALL KEYS
+   - Menu: "All Keys" in sidebar
+   - Shows: Name, Code, Creator, Status, Duration, Device, Actions
+   - Search by name or key code
+   - Filter by status (Active/Inactive/All)
+   - Higher roles see subordinate keys
+
+3. ACTIVATE KEY (Paid Status)
+   - Only higher roles can activate
+   - Select duration: 7/15/30/60/90 days
+   - Click "✅ Activate" button
+   - Sets active duration
+   - Key becomes usable
+   - Click "❌ Unpay" to deactivate
+
+4. KEY ACCESS & AUTHENTICATION
+   - Use endpoint: POST /api/keys/access
+   - Send: {key_code, password}
+   - Returns: Access granted/denied
+   - First access records device IP
+   - Subsequent access validates IP match
+   - Blocks different device automatically
+
+5. DEVICE BINDING
+   - First login from device records IP/MAC
+   - Same key cannot be used from different device
+   - "🔄 Reset" button removes device binding
+   - Allows new device login
+
+5. DELETE KEY
+   - Creator or higher role can delete
+   - "🗑️ Delete" button with confirmation
+   - Permanently removes key
+
+
+KEY STATUS EXPLAINED:
+
+Active (Green)
+- Paid status enabled
+- Has valid duration (days remaining shown)
+- Can be used for authentication
+
+Inactive (Red)
+- Not paid OR duration expired
+- Cannot be used
+- Needs activation by higher role
+
+
+TESTING KEY SYSTEM - STEP BY STEP
+----------------------------------
+
+TEST 1: Seller Creates Key
+1. Login as seller (seller/seller123)
+2. Click "Create Key" menu
+3. Fill form:
+   - Key Name: MyTestKey
+   - Password: test1234
+   - Confirm: test1234
+4. Click "Create Key"
+5. Copy the 9-digit key code shown
+6. Click "All Keys" menu
+7. Verify key appears as "Inactive"
+
+TEST 2: Super Seller Activates Key
+1. Login as super_seller (super_seller/super123)
+2. Click "All Keys" menu
+3. Find seller's key in the list
+4. Select duration (7/15/30/60/90 days)
+5. Click "✅ Activate" button
+6. Confirm activation
+7. Verify status changes to "Active"
+8. Verify days remaining shows selected duration
+
+TEST 3: Key Access Authentication
+1. Use API endpoint or external tool
+2. POST to /api/keys/access
+3. Send JSON: {"key_code": "123456789", "password": "test1234"}
+4. First access: Records IP, grants access
+5. Try from different IP: Blocked with device mismatch error
+6. Use "Reset Device" to allow new device
+
+TEST 4: Device Reset
+1. In "All Keys" view
+2. Find key with device IP/MAC
+3. Click "🔄 Reset" button
+4. Confirm reset
+5. Verify device info cleared
+6. Key can now login from new device
+
+TEST 4: Delete Key
+1. In "All Keys" view
+2. Find any key
+3. Click "🗑️ Delete" button
+4. Confirm deletion
+5. Verify key removed from list
+
+
+FILE STRUCTURE
+--------------
+
+tatkal/
+├── app.py                          # Flask backend server
+├── venom_users.db                  # SQLite database
+├── requirements.txt                # Python dependencies
+├── setup.ps1                       # Automated setup script
+├── QUICK_GUIDE.txt                 # This file
+├── USER_MANAGEMENT_DOCUMENTATION.md # User management docs
+├── INBOX_DOCUMENTATION.md          # Detailed inbox docs
+├── INBOX_QUICKSTART.md             # Step-by-step testing
+├── NEWS_DOCUMENTATION.md           # News system docs
+├── README.md                       # Project overview
+├── SETUP_GUIDE.md                  # Setup instructions
+├── templates/
+│   ├── login.html                  # Login page
+│   ├── master_dashboard.html       # Master dashboard
+│   ├── admin_dashboard.html        # Admin dashboard
+│   ├── super_seller_dashboard.html # Super seller dashboard
+│   └── seller_dashboard.html       # Seller dashboard
+├── static/
+│   ├── auth.js                     # Authentication utilities
+│   ├── inbox.js                    # Inbox functionality
+│   ├── news.js                     # News functionality
+│   ├── user-management.js          # User management (NEW)
+│   └── keys.js                     # Key management (NEW)
+
+
+IMPORTANT NOTES
+---------------
+
+1. Session Duration: 12 hours (auto-logout after 12 hours)
+2. Password Encryption: bcrypt (secure hashing)
+3. Message Deletion: Only recipient can delete their messages
+4. Permission System: Hierarchical (Master > Admin > Super Seller > Seller)
+5. Database: SQLite (file-based, no server required)
+
+
+STOP SERVER
+-----------
+Press Ctrl+C in the PowerShell terminal where server is running
+
+
+RESTART SERVER
+--------------
+1. Stop server (Ctrl+C)
+2. Run: python app.py
+
+
+RESET DATABASE (if needed)
+---------------------------
+1. Stop server (Ctrl+C)
+2. Delete database file:
+   Remove-Item venom_users.db
+3. Restart server:
+   python app.py
+4. Database will be recreated with default users
+
+
+BROWSER COMPATIBILITY
+---------------------
+✓ Google Chrome (Recommended)
+✓ Microsoft Edge
+✓ Mozilla Firefox
+✓ Opera
+✓ Safari
+
+
+KEYBOARD SHORTCUTS
+------------------
+Ctrl+C          - Stop server
+Ctrl+Shift+R    - Hard refresh browser (clear cache)
+F12             - Open browser developer console
+F5              - Refresh page
+
+
+SUPPORT & DOCUMENTATION
+------------------------
+- QUICK_GUIDE.txt           - This quick reference guide
+- INBOX_DOCUMENTATION.md    - Complete inbox system documentation
+- INBOX_QUICKSTART.md       - Step-by-step inbox testing guide
+- README.md                 - Project overview and features
+- SETUP_GUIDE.md            - Detailed setup instructions
+
+
+VERSION INFO
+------------
+Project: VENOM Dashboard
+Version: 1.0
+Date: October 10, 2025
+Backend: Flask 3.0.0
+Database: SQLite
+Authentication: Bcrypt
+Session: Flask-Session (filesystem)
+
+
+NEWS SYSTEM - HOW IT WORKS
+---------------------------
+
+ROLE HIERARCHY & NEWS POSTING PERMISSIONS:
+
+Master (Top Level)
+  └─→ Can post news for: Admin, Super Seller, Seller, All Roles
+      Can view news targeted to: Master
+
+Admin  
+  └─→ Can post news for: Super Seller, Seller, All Roles
+      Can view news targeted to: Admin, All Roles
+
+Super Seller
+  └─→ Can post news for: Seller
+      Can view news targeted to: Super Seller, All Roles
+
+Seller (Bottom Level)
+  └─→ Cannot post news (read-only)
+      Can view news targeted to: Seller, All Roles
+
+
+TESTING NEWS SYSTEM - STEP BY STEP
+-----------------------------------
+
+TEST 1: Master posts news for Admin
+------------------------------------
+1. Login as Master
+   - Username: master
+   - Password: master123
+
+2. Post News
+   - Go to appropriate News section (e.g., "Admin News")
+   - Click "Post News" button
+   - Target Audience: Admin
+   - Title: Important System Update
+   - Content: System maintenance scheduled for tonight
+   - Click "Post News"
+
+3. Sign out and Login as Admin
+   - Username: admin
+   - Password: admin123
+
+4. View News
+   - Go to News section
+   - See news from master with yellow background (unread)
+   - Click to read - background turns white
+   - "NEW" badge disappears
+
+
+TEST 2: Admin posts news for Super Seller
+------------------------------------------
+1. While logged in as admin
+   - Go to Super Seller News section
+   - Click "Post News"
+   - Target Audience: Super Seller
+   - Title: New Commission Structure
+   - Content: Updated commission rates effective from next month
+   - Click "Post News"
+
+2. Sign out and Login as Super Seller
+   - Username: super_seller
+   - Password: super123
+
+3. View News
+   - Go to News section
+   - See news from admin
+
+
+TEST 3: Super Seller posts news for Seller
+-------------------------------------------
+1. While logged in as super_seller
+   - Go to Seller News section
+   - Click "Post News"
+   - Target Audience: Seller
+   - Title: Training Schedule
+   - Content: Mandatory training on Monday at 10 AM
+   - Click "Post News"
+
+2. Sign out and Login as Seller
+   - Username: seller
+   - Password: seller123
+
+3. View News
+   - Go to News section
+   - See news from super_seller
+   - NO "Post News" button (sellers cannot post)
+
+
+NEWS FEATURES
+-------------
+
+1. VIEW NEWS
+   - News list shows all announcements targeted to your role
+   - Unread news highlighted with yellow background
+   - "NEW" badge on unread items
+   - Unread count displayed at top
+   - Color-coded badges for target roles
+
+2. POST NEWS
+   - Click "Post News" button (if authorized)
+   - Select target audience from dropdown
+   - Enter title and content
+   - Submit to publish
+
+3. DELETE NEWS
+   - Only author can delete their own news
+   - Delete button appears only on your posts
+   - Confirm before deletion
+   - Soft delete (archived, not permanently removed)
+
+4. READ TRACKING
+   - Click on news item to mark as read
+   - Read status tracked per user
+   - Unread count updates automatically
+
+5. ROLE BADGES
+   - Master: Red badge
+   - Admin: Orange badge
+   - Super Seller: Green badge
+   - Seller: Blue badge
+   - All: Light green badge
+
+
+COMMON COMMANDS
+---------------
+Start Server:       python app.py
+Stop Server:        Ctrl+C
+Install Packages:   pip install -r requirements.txt
+Reset Database:     Remove-Item venom_users.db; python app.py
+Check Python:       python --version
+List Files:         dir
+
+
+================================================================================
+                           END OF QUICK GUIDE
+================================================================================
+
+For detailed documentation, see:
+- INBOX_DOCUMENTATION.md (inbox system details)
+- INBOX_QUICKSTART.md (inbox testing scenarios)
+- NEWS_DOCUMENTATION.md (news system details)
+- SETUP_GUIDE.md (installation guide)
+
+Happy Testing! 🎉
+
