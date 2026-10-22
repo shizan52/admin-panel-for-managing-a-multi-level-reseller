@@ -1,88 +1,129 @@
-# VENOM Dashboard
-
-A Flask-based multi-tier reseller & access-key management dashboard, originally built for a Tatkal (Indian Railway) ticket-booking service. It gives a business a self-hosted panel to manage a hierarchy of resellers, issue and control license/access keys for an external booking tool, and keep everyone in the chain informed through internal messaging and announcements.
-
-## Overview
-
-The dashboard is organized around a strict role hierarchy — **Super Master → Master → Admin → Super Seller → Seller** — where each role can only create, view, and manage the roles directly below it. This keeps each branch of the reseller tree isolated: a Master only ever sees their own downline, never another Master's.
-
-On top of that hierarchy sit three core systems:
-
-- **Access Key Management** — Each key is a 9-digit access token (with its own name and password) that an external application (the ticket-booking tool) validates against. Keys are locked to a single device (IP/MAC), can be activated for a fixed duration (7–90 days), and every access attempt is logged for auditing.
-- **Inbox / Messaging** — Role-aware internal messaging so higher roles can broadcast instructions or updates down the chain (e.g., Master → Admin → Super Seller → Seller), with read/unread tracking per user.
-- **News & Announcements** — Targeted announcements per role (or broadcast to everyone), with automatic replacement of older news for the same audience so each role always sees the latest notice.
-
-## Features
-
-- Role-based dashboards (Super Master, Master, Admin, Super Seller, Seller) with strict hierarchy isolation
-- User creation & management restricted to the layer directly below the acting role
-- 9-digit access-key issuing system with password protection, device (IP/MAC) binding, and activation windows
-- Full access-key audit trail (per-key access history, success/failure/blocked attempts)
-- Internal inbox with compose/read/delete and unread indicators
-- Role-targeted news/announcements with read tracking
-- Session-based auth with bcrypt password hashing
-- Light/dark mode support
-
-## Tech Stack
-
-- **Backend:** Python, Flask, Flask-Session
-- **Database:** MySQL (via `mysql-connector-python`)
-- **Auth:** bcrypt password hashing, server-side sessions
-- **Frontend:** Vanilla JavaScript, HTML templates, CSS
-
-## Project Structure
+<div align="center">
 
 ```
-tatkal/
-├── app.py              # Flask application & all API routes
-├── config.py            # MySQL connection & session configuration
-├── post_news.py         # CLI tool to post/manage news from the terminal
-├── post_news.sql        # SQL reference snippets for posting news directly
-├── setup_mysql.sql      # Creates the database and MySQL user
-├── setup.ps1             # One-shot PowerShell setup script (Windows)
-├── requirements.txt      # Python dependencies
-├── QUICK_GUIDE.txt       # Full walkthrough: setup, roles, testing checklist
-└── static/
-    ├── auth.js
-    ├── dashboard.css
-    ├── inbox.js
-    ├── keys.js
-    ├── news.js
-    ├── profile.js
-    └── user-management.js
+██╗   ██╗███████╗███╗   ██╗ ██████╗ ███╗   ███╗
+██║   ██║██╔════╝████╗  ██║██╔═══██╗████╗ ████║
+██║   ██║█████╗  ██╔██╗ ██║██║   ██║██╔████╔██║
+╚██╗ ██╔╝██╔══╝  ██║╚██╗██║██║   ██║██║╚██╔╝██║
+ ╚████╔╝ ███████╗██║ ╚████║╚██████╔╝██║ ╚═╝ ██║
+  ╚═══╝  ╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝     ╚═╝
 ```
 
-> **Note:** This copy of the repository includes the backend and static assets only. The HTML `templates/` folder referenced by `app.py` is not included here — add your own templates (or restore them from your working copy) before running the app.
+```
+     ▄▄▄████████▄▄▄
+   ▄████████████████▄
+  ████████████████████
+  ███   ████████   ███
+  ███   ████████   ███
+  ▀████▄▄ ▀██▀ ▄▄████▀
+    ▀██████████████▀
+     ██ ██ ██ ██ ██
+     ▀▀ ▀▀ ▀▀ ▀▀ ▀▀
+```
 
-## Setup
+**VENOM — multi-tier reseller & access-key management dashboard**
 
-1. **Install dependencies**
-   ```powershell
-   pip install -r requirements.txt
-   ```
+![backend: Flask](https://img.shields.io/badge/backend-Flask-black) ![database: MySQL](https://img.shields.io/badge/database-MySQL-blue) ![auth: bcrypt](https://img.shields.io/badge/auth-bcrypt-success) ![frontend: vanilla JS](https://img.shields.io/badge/frontend-vanilla%20JS-yellow)
 
-2. **Create the database**
-   ```powershell
-   mysql -u root -p < setup_mysql.sql
-   ```
+```
+backend  ..... Python · Flask · Flask-Session
+database ..... MySQL
+auth     ..... bcrypt + server-side sessions
+frontend ..... vanilla JS · HTML · CSS (light / dark)
+roles    ..... 5-tier hierarchy, each manages only the one below
+size     ..... app.py: 3,275 lines · 52 routes
+```
 
-3. **Configure the connection**
-   Edit `config.py` with your own MySQL credentials before running anything against a real database.
+</div>
 
-4. **Run the app**
-   ```powershell
-   python app.py
-   ```
-   The dashboard will be available at `http://127.0.0.1:5000`.
+> A self-hosted panel for managing a **hierarchy of resellers**: each role creates and manages only the layer directly below
+> it, issues and controls **access keys** for an external application, and keeps everyone informed through an internal inbox
+> and role-targeted news. Originally built for a ticket-booking software vendor.
 
-For a full walkthrough — including the default seeded accounts, step-by-step tests for the inbox/news/keys systems, and the complete API reference — see [`QUICK_GUIDE.txt`](QUICK_GUIDE.txt).
+```
+▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄
+```
 
-## Security Notes
+## ▓▒░ ROLE LADDER  (each role manages only the one below) ░▒▓
 
-- Change every default/seeded account password immediately if you deploy this anywhere beyond local testing.
-- Update the MySQL credentials in `config.py` and `setup_mysql.sql` to strong, unique values before any real deployment.
-- `app.config['SECRET_KEY']` is currently generated with `os.urandom(24)` at process start, which means sessions are invalidated on every restart — swap this for a persisted secret if you need sessions to survive a redeploy.
+```
+┌──────────────┐
+│ SUPER MASTER │
+└──────────────┘
+        │
+        ▼
+┌──────────────┐
+│    MASTER    │
+└──────────────┘
+        │
+        ▼
+┌──────────────┐
+│    ADMIN     │
+└──────────────┘
+        │
+        ▼
+┌──────────────┐
+│ SUPER SELLER │
+└──────────────┘
+        │
+        ▼
+┌──────────────┐
+│    SELLER    │
+└──────────────┘
+```
 
-## License
+Higher roles see and act on their own sub-tree only — isolation is enforced on the server, not just hidden in the UI.
 
-Personal / private project — no license granted for reuse without permission from the author.
+## ▓▒░ THREE CORE SYSTEMS ░▒▓
+
+```
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║ [KEY]   Access keys  9-digit token + password, device (IP / MAC) binding,            ║
+║                      activation windows of 7 / 15 / 30 / 60 / 90 days,               ║
+║                      full audit trail of every success, failure and blocked attempt  ║
+║ [MAIL]  Inbox         role-aware messaging, compose / read / delete, unread tracking ║
+║ [NEWS]  News          per role or broadcast; a newer item replaces the older one     ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+```
+
+## ▓▒░ QUICK START ░▒▓
+
+```
+╔═══════════════════════════════════════════════════════════╗
+║ pip install -r requirements.txt                           ║
+║ mysql -u root -p < setup_mysql.sql                        ║
+║ # edit config.py with your own MySQL credentials          ║
+║ python app.py                     # http://127.0.0.1:5000 ║
+╚═══════════════════════════════════════════════════════════╝
+```
+
+> **Heads-up:** `templates/` (the HTML pages `app.py` renders) is **not included** in this copy — add your own before running. `static/` holds the front-end logic.
+
+## ▓▒░ LAYOUT ░▒▓
+
+```
+path             what it is
+───────────────────────────────────────────────────────────────────────────────
+app.py           Flask app + all API routes
+config.py        MySQL + session configuration
+post_news.py     post and manage news from the terminal
+setup_mysql.sql  creates the database and the MySQL user
+setup.ps1        one-shot Windows setup
+static/          auth · inbox · keys · news · profile · user-management (+ CSS)
+QUICK_GUIDE.txt  walkthrough, test checklist and the API reference
+```
+
+## ▓▒░ SECURITY ░▒▓
+
+This is a **demo-grade** project. Before using it with real data:
+
+- Change **every** default / seeded account password (they are listed in `QUICK_GUIDE.txt` for local testing only).
+- Replace the MySQL credentials in `config.py` and `setup_mysql.sql` with strong, unique ones.
+- `SECRET_KEY` is generated with `os.urandom(24)` at start-up, so sessions end on every restart — persist a secret if you need them to survive.
+- Put it behind HTTPS and a reverse proxy.
+
+**Licence.** Personal / private project — no licence is granted for reuse without the author's permission.
+
+```
+▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄
+```
